@@ -1,36 +1,64 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 
-const API_URL_1 = 'http://example.com/api1';
-const API_URL_2 = 'http://example.com/api2';
+type Props = {
+  intentMsg: string;
+  scwAddress: string;
+};
 
-const ApiComponent: React.FC = () => {
-  const [data, setData] = useState<any>(null);
+const IntentComponent: React.FC<Props> = ({ intentMsg, scwAddress }) => {
+  const [txObject, setTxObject] = useState<any | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        let provider = new ethers.providers.Web3Provider(window.ethereum);
-        let accounts = await provider.listAccounts();
-        let apiUrl = accounts && accounts.length > 0 ? API_URL_2 : API_URL_1;
+    const fetchIntent = async () => {
+      // initialize provider
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
 
-        const result = await axios.get(apiUrl);
-        setData(result.data);
-      } catch (error) {
-        console.error('Error in fetching data: ', error);
-      }
+      // get chainId
+      const network = await provider.getNetwork();
+      const chainId = network.chainId;
+
+      const options = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+        body: JSON.stringify({
+          recipient: scwAddress,
+          command: intentMsg,
+          chainId: chainId,
+        }),
+      };
+
+      const response = await fetch(
+        `https://intents-api.onrender.com/intents`,
+        options,
+      );
+
+      const data = await response.json();
+      console.log(data.info.txObject);
+      setTxObject(data.info.txObject);
     };
 
-    fetchData();
-  }, []);
+    if (window.ethereum) {
+      fetchIntent();
+    } else {
+      console.log("Please install MetaMask!");
+    }
+  }, [scwAddress, intentMsg]);
 
   return (
     <div>
-      <h1>API Response:</h1>
-      <pre>{JSON.stringify(data)}</pre>
+        <h1 className='text-xl mb-[30px]'>Intent Txn Object is : </h1>
+      <p>
+        to: {txObject?.to} <br />
+        value: {txObject?.value} <br />
+        data: {txObject?.data}
+      </p>
     </div>
   );
-};
+  
+}
 
-export default ApiComponent;
+export default IntentComponent;
