@@ -58,43 +58,26 @@ const IntentComponent: React.FC = () => {
     );
 
     const data = await response.json();
-    console.log(data.info.txObject);
     setTxObject(data.info.txObject);
+    console.log(data.info.txObject);
     setIsLoading(false);
-  };
 
-  const sendTransaction = async () => {
-    if (!txObject) {
-      console.log("Tx Object is null. Please fetch the intent first.");
-      return;
-    }
-
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const signer = provider.getSigner();
-
-    try {
-      const txResponse = await signer.sendTransaction(txObject);
-      console.log("Transaction sent: ", txResponse);
-    } catch (err) {
-      console.error("Error sending transaction: ", err);
+    // Automatically send transaction after fetching intent
+    if(data.info.txObject) {
+      sendTransactionWithPaymaster(data.info.txObject.to, data.info.txObject.value);
     }
   };
 
-  const sendTransactionWithPaymaster = async (to:any,value:any) => {
-    if (!txObject) {
-      console.log("Tx Object is null. Please fetch the intent first.");
-      return;
-    }
-
+  const sendTransactionWithPaymaster = async (to: string, value: string) => {
     try {
       const txHash = await stackupPaymaster(to, value, '0x');
       console.log("Transaction hash: ", txHash);
       setTxnHash(txHash);
-
     } catch (err) {
       console.error("Error sending transaction: ", err);
     }
   };
+  
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,21 +107,7 @@ const IntentComponent: React.FC = () => {
 
       {isLoading ? (
         <p>Loading...</p>
-      ) : (
-        txObject && (
-          <div>
-            <h1 className='text-xl mb-[10px]'>Intent Txn Object is : </h1>
-            <p>
-              to: {txObject?.to} <br />
-              value: {txObject?.value} <br />
-              data: {txObject?.data}
-            </p>
-            <button onClick={() => sendTransactionWithPaymaster(txObject.to, txObject.value)} className='bg-white p-2 rounded-md text-black mt-4'>Send Transaction</button>
-            <br/>
-            {txnHash && <p>Transaction Hash: {txnHash}</p>}
-          </div>
-        )
-      )}
+      ) : txnHash && <p>Transaction Hash: {txnHash}</p>}
     </div>
   );
 }

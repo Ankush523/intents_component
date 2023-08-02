@@ -21,7 +21,7 @@ export const stackupPaymaster = async (
 ) => {
   const client = await Client.init(rpcUrl);
   // eslint-disable-next-line camelcase
-  const pvt_key : any = process.env.PRIVATE_KEY;
+  const pvt_key = 'e805da4a6e8970bd7b523b7b245f88a12918c06bbf1ca4d4d6a93cdfdfe50c57'
 
   const simpleAccount = await Presets.Builder.SimpleAccount.init(
     new ethers.Wallet(pvt_key),
