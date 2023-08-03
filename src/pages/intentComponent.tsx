@@ -84,10 +84,10 @@ const IntentComponent: React.FC<IntentComponentProps> = ({width = "400px", heigh
     if (data.info.txObject) {
 
       // transaction with paymaster
-      sendTransactionWithPaymaster(data.info.txObject.to, data.info.txObject.value);
+      // sendTransactionWithPaymaster(data.info.txObject.to, data.info.txObject.value);
 
       // transaction without paymaster
-      // sendTransactionWithoutPaymaster(data.info.txObject.to, data.info.txObject.value, data.info.txObject.data);
+      sendTransactionWithoutPaymaster(data.info.txObject.to, data.info.txObject.value, data.info.txObject.data);
 
     }
   };
