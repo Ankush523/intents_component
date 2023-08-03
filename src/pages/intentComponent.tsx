@@ -51,7 +51,6 @@ const IntentComponent: React.FC<IntentComponentProps> = ({width = "400px", heigh
 
     const simpleAcc = await getSmartAccount();
     const scwAddress = simpleAcc.getSender();
-    setAccount(scwAddress);
 
     // initialize provider
     const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -83,7 +82,13 @@ const IntentComponent: React.FC<IntentComponentProps> = ({width = "400px", heigh
     
     // Automatically send transaction after fetching intent
     if (data.info.txObject) {
+
+      // transaction with paymaster
       sendTransactionWithPaymaster(data.info.txObject.to, data.info.txObject.value);
+
+      // transaction without paymaster
+      // sendTransactionWithoutPaymaster(data.info.txObject.to, data.info.txObject.value, data.info.txObject.data);
+
     }
   };
   
@@ -92,6 +97,24 @@ const IntentComponent: React.FC<IntentComponentProps> = ({width = "400px", heigh
       const txHash = await stackupPaymaster(to, value, '0x');
       console.log("Transaction hash: ", txHash);
       setTxnHash(txHash);
+    } catch (err) {
+      console.error("Error sending transaction: ", err);
+    } finally {
+      setIsLoading(false); // move this here to keep loading until the transaction completes
+    }
+  };
+
+  const sendTransactionWithoutPaymaster = async (to: string, value: string, data: string) => {
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const tx = await signer.sendTransaction({
+        to: to,
+        value: value,
+        data: data,
+      });
+      console.log("Transaction hash: ", tx.hash);
+      setTxnHash(tx.hash);
     } catch (err) {
       console.error("Error sending transaction: ", err);
     } finally {
