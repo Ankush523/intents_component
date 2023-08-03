@@ -2,13 +2,27 @@ import React, { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import { getSmartAccount } from './getSmartAccount';
 import { stackupPaymaster } from './stackupPaymaster';
+import { Box, Button, Container, Heading, Input, Spinner, VStack, useToast,Text, Center } from '@chakra-ui/react';
+import Lottie from 'lottie-react';
+import animationData from './animation.json'; // import your lottie animation data
 
-const IntentComponent: React.FC = () => {
+declare global {
+  interface Window {
+    ethereum: any;
+  }
+}
+
+interface IntentComponentProps {
+  width?: string;
+  height?: string;
+}
+
+const IntentComponent: React.FC<IntentComponentProps> = ({width = "400px", height = "50px"}) => {
   const [intentMsg, setIntentMsg] = useState<string>('');
-  const [txObject, setTxObject] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [account, setAccount] = useState<string | null>(null);
   const [txnHash, setTxnHash] = useState<string | null>(null);
+  const toast = useToast();
 
   useEffect(() => {
     const fetchAccount = async () => {
@@ -58,7 +72,6 @@ const IntentComponent: React.FC = () => {
     );
 
     const data = await response.json();
-    setTxObject(data.info.txObject);
     console.log(data.info.txObject);
     setIsLoading(false);
 
@@ -78,7 +91,6 @@ const IntentComponent: React.FC = () => {
     }
   };
   
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (window.ethereum) {
@@ -88,27 +100,55 @@ const IntentComponent: React.FC = () => {
     }
   }
 
-  return (
-    <div >
-      {account && <div style={{ position: 'absolute', top: 0, right: 0 }}>Connected Account: {account}</div>}
-      
-      <h1 className='text-xl mb-[30px]'>Enter Intent and Submit:</h1>
-      <form onSubmit={handleSubmit}>
-        <input
-          className='text-black w-[400px] h-[30px] mb-[30px] rounded-md '
-          type="text"
-          value={intentMsg}
-          onChange={(e) => setIntentMsg(e.target.value)}
-          placeholder="Enter your intent here"
-        />
-        <br/>
-        <button type="submit" className='bg-white p-1 rounded-md text-black mb-4'>Submit</button>
-      </form>
+  const displayAccount = account 
+    ? `${account.substring(0, 5)}...${account.substring(account.length - 5)}`
+    : null;
 
-      {isLoading ? (
-        <p>Loading...</p>
-      ) : txnHash && <p>Transaction Hash: {txnHash}</p>}
-    </div>
+  return (
+    <Container maxW="xl" centerContent bg="green.50" borderRadius={10} py={10}>
+      <VStack spacing={8}>
+      <Box 
+        bg="green.700" 
+        color="white" 
+        borderRadius="lg" 
+        px={4} 
+        py={2}
+      >
+        {displayAccount ? `Connected : ${displayAccount}` : 'No Account Connected'}
+      </Box>
+        {/* <Heading color="green.700">Enter Intent and Submit:</Heading> */}
+        <Center w="100%">
+          <form onSubmit={handleSubmit}>
+            <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" width="100%">
+              <Input
+                bg="white"
+                borderColor="green.500"
+                color="green.900"
+                _placeholder={{ color: 'green.400' }}
+                focusBorderColor="green.300"
+                style={{width: width, height: height}}
+                type="text"
+                value={intentMsg}
+                onChange={(e) => setIntentMsg(e.target.value)}
+                placeholder="Enter your intent here"
+              />
+              <br/>
+              <Button type="submit" colorScheme="green" marginBottom="4" width="350px" size="md">Execute</Button>
+            </Box>
+          </form>
+        </Center>
+        {isLoading ? (
+          <Box>
+            <Lottie animationData={animationData} /> 
+            <Text color="green.500" fontSize="lg">Loading...</Text>
+          </Box>
+        ) : txnHash && 
+          <Box color="green.600" fontSize="lg" bg="green.200" borderRadius="md" px={3} py={1}>Transaction Hash: {txnHash}</Box>
+        }
+
+        <Text color="green.600" fontSize="lg">by bytekode</Text>
+      </VStack>
+    </Container>
   );
 }
 

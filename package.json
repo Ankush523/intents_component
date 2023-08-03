@@ -9,14 +9,20 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@chakra-ui/react": "^2.8.0",
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
     "@types/node": "20.4.5",
     "@types/react": "18.2.18",
     "@types/react-dom": "18.2.7",
+    "@walletconnect/web3-provider": "^1.8.0",
     "autoprefixer": "10.4.14",
     "axios": "^1.4.0",
     "eslint": "8.46.0",
     "eslint-config-next": "13.4.12",
     "ethers": "^5.7.2",
+    "framer-motion": "^10.15.0",
+    "lottie-react": "^2.4.0",
     "next": "13.4.12",
     "postcss": "8.4.27",
     "react": "18.2.0",
@@ -24,7 +30,8 @@
     "react-modal": "^3.16.1",
     "tailwindcss": "3.3.3",
     "typescript": "5.1.6",
-    "userop": "^0.3.1"
+    "userop": "^0.3.1",
+    "web3modal": "^1.9.12"
   },
   "devDependencies": {
     "@types/react-modal": "^3.16.0"
