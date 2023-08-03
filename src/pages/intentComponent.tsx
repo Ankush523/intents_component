@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import { getSmartAccount } from './getSmartAccount';
 import { stackupPaymaster } from './stackupPaymaster';
+import { getEnsName } from './ensResolve';
 import { Box, Button, Container, Heading, Input, Spinner, VStack, useToast,Text, Center } from '@chakra-ui/react';
 import Lottie from 'lottie-react';
-import animationData from './animation.json'; // import your lottie animation data
+import animationData from './animation_load.json'; // import your lottie animation data
 
 declare global {
   interface Window {
@@ -22,6 +23,7 @@ const IntentComponent: React.FC<IntentComponentProps> = ({width = "400px", heigh
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [account, setAccount] = useState<string | null>(null);
   const [txnHash, setTxnHash] = useState<string | null>(null);
+  const [isEnsAvailable, setIsEnsAvailable] = useState<boolean>(false);
   const toast = useToast();
 
   useEffect(() => {
@@ -29,7 +31,12 @@ const IntentComponent: React.FC<IntentComponentProps> = ({width = "400px", heigh
       if (window.ethereum) {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
-        const account = await signer.getAddress();
+        let account = await signer.getAddress();
+        const ensName = await getEnsName(account);
+        if(ensName){
+          account = ensName;
+          setIsEnsAvailable(true)
+        } 
         setAccount(account);
       }
     };
@@ -73,14 +80,13 @@ const IntentComponent: React.FC<IntentComponentProps> = ({width = "400px", heigh
 
     const data = await response.json();
     console.log(data.info.txObject);
-    setIsLoading(false);
-
+    
     // Automatically send transaction after fetching intent
-    if(data.info.txObject) {
+    if (data.info.txObject) {
       sendTransactionWithPaymaster(data.info.txObject.to, data.info.txObject.value);
     }
   };
-
+  
   const sendTransactionWithPaymaster = async (to: string, value: string) => {
     try {
       const txHash = await stackupPaymaster(to, value, '0x');
@@ -88,6 +94,8 @@ const IntentComponent: React.FC<IntentComponentProps> = ({width = "400px", heigh
       setTxnHash(txHash);
     } catch (err) {
       console.error("Error sending transaction: ", err);
+    } finally {
+      setIsLoading(false); // move this here to keep loading until the transaction completes
     }
   };
   
@@ -101,18 +109,21 @@ const IntentComponent: React.FC<IntentComponentProps> = ({width = "400px", heigh
   }
 
   const displayAccount = account 
-    ? `${account.substring(0, 5)}...${account.substring(account.length - 5)}`
+    ? isEnsAvailable 
+      ? account 
+      : `${account.substring(0, 5)}...${account.substring(account.length - 5)}`
     : null;
 
   return (
     <Container maxW="xl" centerContent bg="green.50" borderRadius={10} py={10}>
-      <VStack spacing={8}>
+      <VStack spacing={6}>
       <Box 
         bg="green.700" 
         color="white" 
         borderRadius="lg" 
         px={4} 
         py={2}
+        fontFamily={'Raleway'}
       >
         {displayAccount ? `Connected : ${displayAccount}` : 'No Account Connected'}
       </Box>
@@ -130,23 +141,41 @@ const IntentComponent: React.FC<IntentComponentProps> = ({width = "400px", heigh
                 type="text"
                 value={intentMsg}
                 onChange={(e) => setIntentMsg(e.target.value)}
+                fontFamily={'Space Mono'}
                 placeholder="Enter your intent here"
               />
               <br/>
-              <Button type="submit" colorScheme="green" marginBottom="4" width="350px" size="md">Execute</Button>
+              <Button fontFamily={'Raleway'} type="submit" colorScheme="green" marginBottom="4" width="350px" size="md">Execute</Button>
             </Box>
           </form>
         </Center>
         {isLoading ? (
           <Box>
-            <Lottie animationData={animationData} /> 
-            <Text color="green.500" fontSize="lg">Loading...</Text>
+            <Lottie animationData={animationData} style={{width: "150px", height: "150px"}}/> 
+            {/* <Text color="green.500"  fontSize="lg">Executing...</Text> */}
           </Box>
         ) : txnHash && 
-          <Box color="green.600" fontSize="lg" bg="green.200" borderRadius="md" px={3} py={1}>Transaction Hash: {txnHash}</Box>
+        <Box
+            color="green.800"
+            fontSize="lg"
+            bg="green.200"
+            borderRadius="md"
+            px={5} // Increase horizontal padding
+            py={2} // Increase vertical padding
+            wordBreak="break-all" // Break words to prevent overflow
+            onClick={() => window.open(`https://goerli.etherscan.io/tx/${txnHash}`, "_blank")} // Replace this with the correct block explorer URL
+            cursor="pointer" // Change cursor to pointer on hover to indicate clickability
+        >
+            Your transaction is completed. Click here to view.
+        </Box>
         }
-
-        <Text color="green.600" fontSize="lg">by bytekode</Text>
+        <Text 
+        fontFamily={'Space mono'} 
+        color="green.700" fontSize="lg"
+        onClick={() => window.open(`https://intents-bytekode.vercel.app/`, "_blank")}
+        >
+          by ©️bytekode labs,inc
+        </Text>
       </VStack>
     </Container>
   );
